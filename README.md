@@ -1,7 +1,7 @@
 # SymuRes
 A Multi-Reservoir MFD-Based Traffic Simulation Platform
 
-Version 1.1 - 2020
+Version 2.0 - 2020
 
 ![Image](img_symures.png "image")
 
@@ -15,11 +15,14 @@ This simulation platform was developed during the PhD of Guilhem Mariotte. It al
 
 Authors
 -------
-- Guilhem Mariotte - guilhem.mariotte@univ-eiffel.fr | [guilhemmariotte.com](http://guilhemmariotte.com/en)
-(Simulation platform design, traffic flow solvers, pre-processing and post-processing modules)
+- Guilhem Mariotte, main author - guilhem.mariotte@univ-eiffel.fr | [guilhemmariotte.com](http://guilhemmariotte.com/en)
+(Simulation platform design, traffic flow solvers, pre-processing and post-processing modules, bugs tracking, version management)
 
-- Sergio F. A. Batista - sab21@nyu.edu
+- Sergio F. A. Batista, contributor - sab21@nyu.edu
 (DTA module, assignment and convergence loop)
+
+- Mahendra Paipuri, contributor - mahendra.paipuri@univ-eiffel.fr
+(Multimodality, 3D-MFD functions)
 
 Designing a simulation
 ----------------------
@@ -69,3 +72,17 @@ Bug fixes in the trip-based solver, add FIFO merge model in the acc-based solver
 - plotRoutes.m: same modification as in plotMacroNodes.m, and now can plot macro nodes
 - plotLinkReservoirs.m: plot links and nodes for the given reservoir list only (instead of the full network)
 - Main.m: minor typo fixes
+
+V2.0 - July 2020
+----------------
+Add multimodality with the nD-MFD concept (n modes)
+
+- AssignCalc.m: account for route mode in the initial estimation of the average trip length
+- ConvergeCalc.m: account for multiple modes in the variables when checking for gridlocks during the simulation
+- FDfunctions folder: add a new 3D parabolic model (with normalization parameters in the function def)
+- RouteCalc.m: reorganize with the possibility of having multiple modes
+- RouteCalc.m: in Reservoir, all the fields like 'EntryRoutesIndex' are now cells of lists per mode
+- MFDsolver_accbased.m and MFDsolver_tripbased.m: new 'mode' ID for each route
+- MFDsolver_accbased.m and MFDsolver_tripbased.m: Acc and MeanSpeed fields now with a distinction on the mode (i.e. acc per mode instead of total acc, idem for mean speed)
+- MFDsolver_accbased.m and MFDsolver_tripbased.m: add loops on the number of modes at every loop on the routes
+- PostProc_accbased.m and PostProc_tripbased.m: add the field AccPerMode to turn the field Acc back to total accumulation (as in V1.1)
