@@ -17,19 +17,15 @@ function extarray = arrayextension(array,Next,type)
 
                                  if strcmp(type,'column')
                                          extarray = array;
-while size(extarray,2) < Next
-    extarray = [extarray array];
-end
-extarray = extarray(:,1:Next);
-elseif strcmp(type,'row')
-extarray = array;
-while size(extarray,1) < Next
-    extarray = [extarray; array];
-end
-extarray = extarray(1:Next,:);
-else
-    warning('Bad extension type, must be one of the following: column, row')
+while
+  size(extarray, 2) < Next extarray = [extarray array];
+end extarray = extarray( :, 1 : Next);
+elseif strcmp(type, 'row') extarray = array;
+while
+  size(extarray, 1) < Next extarray = [extarray; array];
+end extarray = extarray(1 : Next, :);
+else warning('Bad extension type, must be one of the following: column, row')
     extarray = [];
 end
 
-end
+    end

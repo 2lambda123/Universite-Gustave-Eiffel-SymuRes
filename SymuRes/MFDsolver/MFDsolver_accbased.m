@@ -1,22 +1,18 @@
-%% MFD SOLVER
-%--------------------------------------------------------------------------
-% Multi-reservoir MFD-based traffic flow solver
-% Accumulation-based model
-%
-% Nov 2019 - Guilhem Mariotte
-% Original version
-%
-% Feb 2020 - Mahendra Paipuri
-% Extension to multimodality with 3D-MFD functions
-%
-% References:
-% Mariotte et al. (TR part B, 2017)
-% Mariotte & Leclercq (TR part B, 2019)
-% Mariotte et al. (TR part B, 2020)
-% Paipuri & Leclercq (TR part B, 2020)
+% % MFD SOLVER %
+        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- %
+        Multi -
+    reservoir MFD - based traffic flow solver % Accumulation -
+    based model % % Nov 2019 -
+    Guilhem Mariotte % Original version % % Feb 2020 -
+    Mahendra Paipuri % Extension to multimodality with 3D -
+    MFD functions % %
+        References
+    : %
+      Mariotte et al.(TR part B, 2017) % Mariotte &Leclercq(TR part B, 2019) %
+      Mariotte et al.(TR part B, 2020) % Paipuri &Leclercq(TR part B, 2020)
 
-% Simulation attributes
-SimulationDuration = Simulation.Duration;
+      %
+      Simulation attributes SimulationDuration = Simulation.Duration;
 TimeStep = Simulation.TimeStep;
 SimulTime = Simulation.Time;
 NumModes = Simulation.NumModes;
@@ -24,9 +20,12 @@ MFDfct = Simulation.MFDfct;
 Entryfct = Simulation.Entryfct;
 Exitfct = Simulation.Exitfct;
 
-% Assignment period time window
-Temp_StartTimeID = floor(Assignment.CurrentTime/TimeStep) + 1;
-Temp_EndTimeID = min([floor(Assignment.Periods(Assignment.CurrentPeriodID+1)/TimeStep) NumTimes-1]);
+% Assignment period time window Temp_StartTimeID =
+    floor(Assignment.CurrentTime / TimeStep) + 1;
+Temp_EndTimeID =
+    min([floor(Assignment.Periods(Assignment.CurrentPeriodID + 1) / TimeStep)
+             NumTimes -
+         1]);
 Temp_numtimesperiod = Temp_EndTimeID - Temp_StartTimeID + 1;
 
 if Assignment.CurrentPeriodID == 1
@@ -35,43 +34,43 @@ if Assignment.CurrentPeriodID == 1
 for r = 1:
             NumRes
             Temp_Nroutes = length(Reservoir(r).RoutesID);
-% Variable initialization
-Reservoir(r).Acc = zeros(NumModes,NumTimes);
-% accumulation per mode [veh]
-Reservoir(r).AccPerRoute = zeros(Temp_Nroutes,NumTimes);
-% accumulation per route crossing Rr [veh]
-Reservoir(r).AccCircuPerRoute = zeros(Temp_Nroutes,NumTimes);
-% circulating accumulation per route [veh]
-Reservoir(r).AccQueuePerRoute = zeros(Temp_Nroutes,NumTimes);
-% queuing accumulation per route [veh]
-Reservoir(r).MeanSpeed = zeros(NumModes,NumTimes);
-% mean speed [m/s]
-Reservoir(r).InflowPerRoute = zeros(Temp_Nroutes,NumTimes);
-% inflow per route [veh/s]
-Reservoir(r).OutflowPerRoute = zeros(Temp_Nroutes,NumTimes);
-% outflow per route [veh/s]
-Reservoir(r).OutflowCircuPerRoute = zeros(Temp_Nroutes,NumTimes);
-% outflow of circulating veh per route [veh/s]
-Reservoir(r).NinPerRoute = zeros(Temp_Nroutes,NumTimes);
-% entry cumulative count per route [veh]
-Reservoir(r).NoutPerRoute = zeros(Temp_Nroutes,NumTimes);
-% exit cumulative count per route [veh]
-Reservoir(r).NoutCircuPerRoute = zeros(Temp_Nroutes,NumTimes);
-% exit cumulative count of circulating veh per route [veh]
+% Variable initialization Reservoir(r).Acc = zeros(NumModes, NumTimes);
+% accumulation per mode[veh] Reservoir(r).AccPerRoute = zeros(Temp_Nroutes,
+                                                              NumTimes);
+% accumulation per route crossing Rr[veh] Reservoir(r).AccCircuPerRoute =
+    zeros(Temp_Nroutes, NumTimes);
+% circulating accumulation per route[veh] Reservoir(r).AccQueuePerRoute =
+    zeros(Temp_Nroutes, NumTimes);
+% queuing accumulation per route[veh] Reservoir(r).MeanSpeed = zeros(NumModes,
+                                                                     NumTimes);
+% mean speed[m / s] Reservoir(r).InflowPerRoute = zeros(Temp_Nroutes, NumTimes);
+% inflow per route[veh / s] Reservoir(r).OutflowPerRoute = zeros(Temp_Nroutes,
+                                                                 NumTimes);
+% outflow per route[veh / s] Reservoir(r).OutflowCircuPerRoute =
+    zeros(Temp_Nroutes, NumTimes);
+% outflow of circulating veh per route[veh / s] Reservoir(r).NinPerRoute =
+    zeros(Temp_Nroutes, NumTimes);
+% entry cumulative count per route[veh] Reservoir(r).NoutPerRoute =
+    zeros(Temp_Nroutes, NumTimes);
+% exit cumulative count per route[veh] Reservoir(r).NoutCircuPerRoute =
+    zeros(Temp_Nroutes, NumTimes);
+% exit cumulative count of circulating veh per route[veh]
 
-% Initial accumulation, mean speed and trip length
-Reservoir(r).Acc(:,1) = zeros(NumModes,1);
-Reservoir(r).AccPerRoute(:,1) = zeros(Temp_Nroutes,1);
-Reservoir(r).AccCircuPerRoute(:,1) = zeros(Temp_Nroutes,1);
-Reservoir(r).MeanSpeed(:,1) = Reservoir(r).FreeflowSpeed(1:NumModes);
-Reservoir(r).NinPerRoute(:,1) = zeros(Temp_Nroutes,1);
+    % Initial accumulation,
+    mean speed and trip length Reservoir(r).Acc(
+        :, 1) = zeros(NumModes, 1);
+Reservoir(r).AccPerRoute( :, 1) = zeros(Temp_Nroutes, 1);
+Reservoir(r).AccCircuPerRoute( :, 1) = zeros(Temp_Nroutes, 1);
+Reservoir(r).MeanSpeed( :, 1) = Reservoir(r).FreeflowSpeed(1 : NumModes);
+Reservoir(r).NinPerRoute( :, 1) = zeros(Temp_Nroutes, 1);
 
 % Number of vehicles waiting to enter Rr when Rr is the begining of the route
-Reservoir(r).NumWaitingVeh = zeros(1,Temp_Nroutes);
+        Reservoir(r)
+            .NumWaitingVeh = zeros(1, Temp_Nroutes);
 
 % Entry demand cumulative count for the FIFO merge
 Reservoir(r).NinDemandPerRoute = zeros(Temp_Nroutes,NumTimes);
-Reservoir(r).NinDemandPerRoute1 = zeros(Temp_Nroutes,NumTimes);
+Reservoir(r).NinDemandPerRoute1 = zeros(Temp_Nroutes, NumTimes);
 
 % Queue factor for the queuedyn exit model
 Reservoir(r).QueueFactor = 1;
@@ -81,10 +80,9 @@ for iroute = 1:
              Route(iroute).TravelTime = zeros(1,NumTimes);
 end
 
-else
+    else
 
-    % Load from previous assignment period
-    Reservoir = Snapshot.Reservoir;
+    % Load from previous assignment period Reservoir = Snapshot.Reservoir;
 
 end
 
@@ -93,15 +91,15 @@ for i = 1:
         NumMacroNodes
         Temp_times = MacroNode(i).Capacity.Time;
 Temp_data = MacroNode(i).Capacity.Data;
-[Temp_times, Temp_data] = stairfct(Temp_times,Temp_data,TimeStep,0,SimulationDuration);
+[ Temp_times, Temp_data ] =
+    stairfct(Temp_times, Temp_data, TimeStep, 0, SimulationDuration);
 MacroNode(i).Supply = Temp_data;
 end
 
-eps0 = 1e-3;
-% criterion to determine if there are vehicles in the waiting list [veh]
-    eps1 = 1e-6;
-% criterion to determine if there is a difference in flow [veh/s]
-    eps2 = 10;
+    eps0 = 1e-3;
+% criterion to determine if there are vehicles in the waiting list[veh] eps1 =
+    1e-6;
+% criterion to determine if there is a difference in flow[veh / s] eps2 = 10;
 
 %% Simulation loop
 %--------------------------------------------------------------------------
@@ -116,44 +114,40 @@ for itime = Temp_StartTimeID:
 
                         % Variable reset
                         Temp_Nroutes = length(Reservoir(r).RoutesID);
-Reservoir(r).InflowDemandPerRoute = zeros(1,Temp_Nroutes);
-Reservoir(r).InflowSupplyPerRoute = zeros(1,Temp_Nroutes);
-Reservoir(r).MergeCoeffPerRoute = ones(1,Temp_Nroutes);
-Reservoir(r).OutflowDemandPerRoute = zeros(1,Temp_Nroutes);
-Reservoir(r).OutflowSupplyPerRoute = zeros(1,Temp_Nroutes);
+Reservoir(r).InflowDemandPerRoute = zeros(1, Temp_Nroutes);
+Reservoir(r).InflowSupplyPerRoute = zeros(1, Temp_Nroutes);
+Reservoir(r).MergeCoeffPerRoute = ones(1, Temp_Nroutes);
+Reservoir(r).OutflowDemandPerRoute = zeros(1, Temp_Nroutes);
+Reservoir(r).OutflowSupplyPerRoute = zeros(1, Temp_Nroutes);
 Reservoir(r).InternalProd = 0;
-Reservoir(r).ExitCoeffPerRoute = ones(1,Temp_Nroutes);
+Reservoir(r).ExitCoeffPerRoute = ones(1, Temp_Nroutes);
 
-% Queue factor to adjust the MFD shape due to queuing accumulation
-% (= 1 in case of no queues)
-    Temp_QF = 1 - sum(Reservoir(r).AccQueuePerRoute(:,itime))/Reservoir(r).MaxAcc;
+% Queue factor to adjust the MFD shape due to queuing accumulation %
+    (= 1 in case of no queues) Temp_QF = 1 - sum(Reservoir(r).AccQueuePerRoute(
+                                                 :, itime)) /
+                                                 Reservoir(r).MaxAcc;
 Reservoir(r).QueueFactor = Temp_QF;
 
-% Reservoir Rr current accumulation and characteristics
-Temp_nr = zeros(NumModes,1);
-for i_m = 1:
-NumModes
-Temp_modeindex = Reservoir(r).ModeIndex{i_m};
-Temp_nr(i_m) = sum(Reservoir(r).AccCircuPerRoute(Temp_modeindex,itime));
-end
-Temp_param = Reservoir(r).MFDfctParam;
-Temp_Pc = Temp_QF*Reservoir(r).MaxProd;
-Temp_Pr = MFDfct(Temp_nr,Temp_param);
-Temp_Pr = Temp_QF*Temp_Pr(1:NumModes);
+% Reservoir Rr current accumulation and characteristics Temp_nr =
+    zeros(NumModes, 1);
+for
+  i_m = 1 : NumModes Temp_modeindex = Reservoir(r).ModeIndex{i_m};
+Temp_nr(i_m) = sum(Reservoir(r).AccCircuPerRoute(Temp_modeindex, itime));
+end Temp_param = Reservoir(r).MFDfctParam;
+Temp_Pc = Temp_QF * Reservoir(r).MaxProd;
+Temp_Pr = MFDfct(Temp_nr, Temp_param);
+Temp_Pr = Temp_QF * Temp_Pr(1 : NumModes);
 
-% Reservoir Rr current mean speed
-if Temp_nr == 0
-Temp_Vr = Reservoir(r).FreeflowSpeed;
-else
-    Temp_Vr = Temp_QF*MFDfct(Temp_nr,Temp_param)./Temp_nr;
+% Reservoir Rr current mean speed if Temp_nr == 0 Temp_Vr =
+    Reservoir(r).FreeflowSpeed;
+else Temp_Vr = Temp_QF * MFDfct(Temp_nr, Temp_param)./ Temp_nr;
 idx = find(isnan(Temp_Vr));
 Temp_Vr(idx) = Reservoir(r).FreeflowSpeed(idx);
-end
-Reservoir(r).MeanSpeed(:,itime) = Temp_Vr(1:NumModes);
+end Reservoir(r).MeanSpeed( :, itime) = Temp_Vr(1 : NumModes);
 
-% Outflow demand production available per mode
-Temp_param = Reservoir(r).ExitfctParam;
-Temp_proddemand = Exitfct(Temp_nr,Temp_param);
+% Outflow demand production available per mode Temp_param =
+    Reservoir(r).ExitfctParam;
+Temp_proddemand = Exitfct(Temp_nr, Temp_param);
 
 % Outflow demand per route in each mode
 for i_m = 1:
@@ -161,30 +155,24 @@ for i_m = 1:
           for i_r = Reservoir(r).ExitRoutesIndex{i_m} % loop on all routes exiting Rr
                             Temp_nrp = Reservoir(r).AccCircuPerRoute(i_r,itime);
 Temp_Lrp = Reservoir(r).TripLengthPerRoute(i_r);
-if strcmp(Simulation.DivergeModel,'maxdem')
-    % Maximum exit demand model
-    if Temp_nr(i_m) == 0
-        Temp_Orp = Temp_nrp/Temp_Lrp*Temp_Vr(i_m);
-    else
-        Temp_Orp = Temp_nrp/Temp_nr(i_m)*Temp_proddemand(i_m)/Temp_Lrp;
-% maximum outflow
-% Temp_Orp = Temp_nrp/Temp_nr(i_m)*sum(Temp_proddemand)/Temp_Lrp;
-% maximum outflow
-end
-elseif strcmp(Simulation.DivergeModel,'queuedyn')
-% Boundary queue dynamics
-Reservoir(r).OutflowCircuPerRoute(i_r,itime) = Temp_nrp/Temp_Lrp*Temp_Vr;
-if Reservoir(r).AccQueuePerRoute(i_r,itime) < eps0
-    Temp_Orp = Reservoir(r).OutflowCircuPerRoute(i_r,itime);
-% no queue
+if strcmp (Simulation.DivergeModel, 'maxdem')
+  % Maximum exit demand model if Temp_nr (i_m) == 0 Temp_Orp =
+      Temp_nrp / Temp_Lrp * Temp_Vr(i_m);
 else
-    Temp_Orp = MacroNode(Reservoir(r).RoutesNodeID(2,i_r)).Supply(i_m,itime);
-end
-elseif strcmp(Simulation.DivergeModel,'decrdem')
-% Decreasing exit demand model (classic)
-Temp_Orp = Temp_nrp/Temp_Lrp*Temp_Vr(i_m);
-end
-Reservoir(r).OutflowDemandPerRoute(i_r) = Temp_Orp;
+  Temp_Orp = Temp_nrp / Temp_nr(i_m) * Temp_proddemand(i_m) / Temp_Lrp;
+% maximum outflow % Temp_Orp =
+    Temp_nrp / Temp_nr(i_m) * sum(Temp_proddemand) / Temp_Lrp;
+% maximum outflow end elseif strcmp(Simulation.DivergeModel, 'queuedyn') %
+    Boundary queue dynamics Reservoir(r).OutflowCircuPerRoute(i_r, itime) =
+    Temp_nrp / Temp_Lrp * Temp_Vr;
+if Reservoir (r)
+  .AccQueuePerRoute(i_r, itime) < eps0 Temp_Orp =
+      Reservoir(r).OutflowCircuPerRoute(i_r, itime);
+% no queue else Temp_Orp =
+    MacroNode(Reservoir(r).RoutesNodeID(2, i_r)).Supply(i_m, itime);
+end elseif strcmp(Simulation.DivergeModel, 'decrdem') % Decreasing exit demand
+    model(classic) Temp_Orp = Temp_nrp / Temp_Lrp * Temp_Vr(i_m);
+end Reservoir(r).OutflowDemandPerRoute(i_r) = Temp_Orp;
 end
 end
 for i_m = 1:
@@ -192,9 +180,9 @@ for i_m = 1:
           for i_r = Reservoir(r).DestRoutesIndex{i_m} % loop on all routes ending in Rr
                             Temp_nrp = Reservoir(r).AccCircuPerRoute(i_r,itime);
 Temp_Lrp = Reservoir(r).TripLengthPerRoute(i_r);
-Temp_Orp = Temp_nrp/Temp_Lrp*Temp_Vr(i_m);
+Temp_Orp = Temp_nrp / Temp_Lrp * Temp_Vr(i_m);
 Reservoir(r).OutflowDemandPerRoute(i_r) = Temp_Orp;
-Reservoir(r).OutflowCircuPerRoute(i_r,itime) = Temp_Orp;
+Reservoir(r).OutflowCircuPerRoute(i_r, itime) = Temp_Orp;
 end
 end
 
@@ -211,15 +199,16 @@ for r = 1:
 
 % Inflow demand for all routes
 Temp_Nroutes = length(Reservoir(r).RoutesID);
-Temp_dem = zeros(1,Temp_Nroutes);
+Temp_dem = zeros(1, Temp_Nroutes);
 i_r = 1;
-for iroute = Reservoir(r).RoutesID % loop on all routes in Rr
-                 if r == Route(iroute).ResOriginID % Rr origin of the route
-                     i_m = Reservoir(r).RouteMode(i_r);
-if ismember(i_r,Reservoir(r).EntryRoutesIndex{i_m}) % external origin
-    if Reservoir(r).NumWaitingVeh(i_r) < eps0
-        Reservoir(r).InflowDemandPerRoute(i_r) = Route(iroute).Demand(itime);
-    else
+for
+  iroute = Reservoir(r).RoutesID % loop on all routes in Rr if r ==
+           Route(iroute).ResOriginID % Rr origin of the route i_m =
+               Reservoir(r).RouteMode(i_r);
+if ismember (i_r, Reservoir(r).EntryRoutesIndex{i_m})
+  % external origin if Reservoir (r).NumWaitingVeh(i_r) <
+      eps0 Reservoir(r).InflowDemandPerRoute(i_r) = Route(iroute).Demand(itime);
+else
     % In the case of queued vehicles, inflow demand
             % should be high enough to be able to use reservoir
             % capacity. Here the maximum route demand
@@ -253,29 +242,30 @@ end
 
             % Effective inflow for internal origins (not restricted)
                 Temp_inflowdemand = Reservoir(r).InflowDemandPerRoute;
-Reservoir(r).InternalProd = zeros(1,NumModes);
+      Reservoir(r).InternalProd = zeros(1, NumModes);
 for i_m = 1:
 NumModes
 for i_n = Reservoir(r).OriNodesIndex{i_m} % loop on all origin nodes in Rr
               inode = Reservoir(r).MacroNodesID(i_n);
-Temp_indexes = Reservoir(r).NodeRoutesIndex{i_m,i_n};
-Temp_allindexes = [Reservoir(r).NodeRoutesIndex{:,i_n}];
+Temp_indexes = Reservoir(r).NodeRoutesIndex{i_m, i_n};
+Temp_allindexes = [Reservoir(r).NodeRoutesIndex{ :, i_n}];
 % all routes irrespective of mode for a given node
 if ~isempty(Temp_indexes)
         Temp_dem = Reservoir(r).InflowDemandPerRoute(Temp_indexes);
 Temp_demtot = sum(Temp_dem);
-if Temp_demtot > 0
-Temp_mergecoeff = Temp_dem./Temp_demtot;
+if Temp_demtot
+  > 0 Temp_mergecoeff = Temp_dem./ Temp_demtot;
 else
-Temp_mergecoeff = ones(1,length(Temp_indexes));
-end
-Temp_modesupplycoeff = sum(Temp_inflowdemand(Temp_indexes))/sum(Temp_inflowdemand(Temp_allindexes));
-% split the total supply between each mode
-Temp_flowsupply = Temp_modesupplycoeff*MacroNode(inode).Supply(itime);
-Temp_inflow = mergeFair(Temp_dem,Temp_flowsupply,Temp_mergecoeff);
-Reservoir(r).InflowPerRoute(Temp_indexes,itime) = Temp_inflow';
-        Temp_Ltrip = Reservoir(r).TripLengthPerRoute(Temp_indexes);
-Reservoir(r).InternalProd(i_m) = Reservoir(r).InternalProd(i_m) + sum(Temp_Ltrip.*Temp_inflow);
+  Temp_mergecoeff = ones(1, length(Temp_indexes));
+end Temp_modesupplycoeff = sum(Temp_inflowdemand(Temp_indexes)) /
+                           sum(Temp_inflowdemand(Temp_allindexes));
+% split the total supply between each mode Temp_flowsupply =
+    Temp_modesupplycoeff * MacroNode(inode).Supply(itime);
+Temp_inflow = mergeFair(Temp_dem, Temp_flowsupply, Temp_mergecoeff);
+Reservoir(r).InflowPerRoute(Temp_indexes, itime) = Temp_inflow'; Temp_Ltrip =
+    Reservoir(r).TripLengthPerRoute(Temp_indexes);
+Reservoir(r).InternalProd(i_m) = Reservoir(r).InternalProd(i_m) +
+                                 sum(Temp_Ltrip.*Temp_inflow);
 end
 end
 end
@@ -286,10 +276,11 @@ if strcmp(Simulation.MergeModel,'endogenous')
 for i_m = 1:
                       NumModes
                       Temp_indexes = Reservoir(r).EntryRoutesIndex{i_m};
-Temp_nrp = Reservoir(r).AccCircuPerRoute(Temp_indexes,itime)';
-           Temp_nr_entry = sum(Temp_nrp);
-if Temp_nr_entry > 0
-Reservoir(r).MergeCoeffPerRoute(Temp_indexes) = (Temp_nrp > 0).*Temp_nrp./Temp_nr_entry + (Temp_nrp <= 0).*1;
+Temp_nrp = Reservoir(r).AccCircuPerRoute(Temp_indexes, itime)'; Temp_nr_entry =
+    sum(Temp_nrp);
+if Temp_nr_entry
+  > 0 Reservoir(r).MergeCoeffPerRoute(Temp_indexes) =
+      (Temp_nrp > 0).*Temp_nrp./ Temp_nr_entry + (Temp_nrp <= 0).*1;
 end
 end
 elseif strcmp(Simulation.MergeModel,'demprorata')
@@ -299,16 +290,13 @@ for i_m = 1:
           Temp_indexes = Reservoir(r).EntryRoutesIndex{i_m};
 Temp_dem = Reservoir(r).InflowDemandPerRoute(Temp_indexes);
 Temp_demtot = sum(Temp_dem);
-if Temp_demtot > 0
-Reservoir(r).MergeCoeffPerRoute(Temp_indexes) = Temp_dem./Temp_demtot;
-end
-end
-elseif strcmp(Simulation.MergeModel,'demfifo')
-% Demand FIFO flow merge
-Temp_dem = Reservoir(r).InflowDemandPerRoute;
+if Temp_demtot
+  > 0 Reservoir(r).MergeCoeffPerRoute(Temp_indexes) = Temp_dem./ Temp_demtot;
+end end elseif strcmp(Simulation.MergeModel, 'demfifo') % Demand FIFO flow merge
+    Temp_dem = Reservoir(r).InflowDemandPerRoute;
 Temp_demtot = sum(Temp_dem);
-if Temp_demtot > 0
-Reservoir(r).MergeCoeffPerRoute = Temp_dem./Temp_demtot;
+if Temp_demtot
+  > 0 Reservoir(r).MergeCoeffPerRoute = Temp_dem./ Temp_demtot;
 end
 elseif strcmp(Simulation.MergeModel,'equiproba')
 % Equi-probability for all transfer inflows
@@ -316,40 +304,38 @@ for i_m = 1:
               NumModes
               Temp_indexes = Reservoir(r).EntryRoutesIndex{i_m};
 Temp_Nroutes = length(Temp_indexes);
-if Temp_Nroutes > 0
-Reservoir(r).MergeCoeffPerRoute(Temp_indexes) = ones(1,Temp_Nroutes)./Temp_Nroutes;
-end
-end
-end
+if Temp_Nroutes
+  > 0 Reservoir(r).MergeCoeffPerRoute(Temp_indexes) =
+      ones(1, Temp_Nroutes)./ Temp_Nroutes;
+end end end
 
-% Inflow limitation due to node supply at entry (border supply)
-Temp_inflowdemand = Reservoir(r).InflowDemandPerRoute;
+    % Inflow limitation due to node supply at entry(border supply)
+          Temp_inflowdemand = Reservoir(r).InflowDemandPerRoute;
 for i_m = 1:
           NumModes
           for i_n = Reservoir(r).EntryNodesIndex{i_m} % loop on all entry border nodes in Rr
                             inode = Reservoir(r).MacroNodesID(i_n);
-Temp_indexes = Reservoir(r).NodeRoutesIndex{i_m,i_n};
-Temp_allindexes = [Reservoir(r).NodeRoutesIndex{:,i_n}];
-if ~isempty(Temp_indexes)
-    Temp_flowdem = Reservoir(r).InflowDemandPerRoute(Temp_indexes);
-Temp_modesupplycoeff = sum(Temp_inflowdemand(Temp_indexes))/sum(Temp_inflowdemand(Temp_allindexes));
-% split the total supply between each mode
-Temp_flowsupply = Temp_modesupplycoeff*MacroNode(inode).Supply(itime);
+Temp_indexes = Reservoir(r).NodeRoutesIndex{i_m, i_n};
+Temp_allindexes = [Reservoir(r).NodeRoutesIndex{ :, i_n}];
+if
+  ~isempty(Temp_indexes)
+      Temp_flowdem = Reservoir(r).InflowDemandPerRoute(Temp_indexes);
+Temp_modesupplycoeff = sum(Temp_inflowdemand(Temp_indexes)) /
+                       sum(Temp_inflowdemand(Temp_allindexes));
+% split the total supply between each mode Temp_flowsupply =
+    Temp_modesupplycoeff * MacroNode(inode).Supply(itime);
 Temp_mergecoeff = Reservoir(r).MergeCoeffPerRoute(Temp_indexes);
 Temp_mergecoefftot = sum(Temp_mergecoeff);
-Temp_newflowdem = mergeFair(Temp_flowdem,Temp_flowsupply,Temp_mergecoeff./Temp_mergecoefftot);
+Temp_newflowdem = mergeFair(Temp_flowdem, Temp_flowsupply,
+                            Temp_mergecoeff./ Temp_mergecoefftot);
 % Modify the original demands to account for node supply
 Reservoir(r).InflowDemandPerRoute(Temp_indexes) = Temp_newflowdem;
-end
-end
-end
+end end end
 
-% Reservoir Rr current accumulation
-Temp_nr = zeros(NumModes,1);
-for i_m = 1:
-          NumModes
-          Temp_modeindex = Reservoir(r).ModeIndex{i_m};
-Temp_nr(i_m) = sum(Reservoir(r).AccCircuPerRoute(Temp_modeindex,itime));
+    % Reservoir Rr current accumulation Temp_nr = zeros(NumModes, 1);
+for
+  i_m = 1 : NumModes Temp_modeindex = Reservoir(r).ModeIndex{i_m};
+Temp_nr(i_m) = sum(Reservoir(r).AccCircuPerRoute(Temp_modeindex, itime));
 end
 
 % Effective inflow for entering routes
@@ -644,7 +630,3 @@ Temp_totprodsupply = Temp_QF*(sum(Entryfct(Temp_nr,Temp_param)' - Reservoir(r).I
                                                                                                                                                                                                                                                                                       % TT for the last time step (simplification, useful for the last assignment period only)
                                                                                                                                                                                                                                                                                               Route(iroute).TravelTime(NumTimes) = Route(iroute).TravelTime(NumTimes-1);
                                                                                                                                                                                                                                                                                               end
-
-
-
-

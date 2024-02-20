@@ -35,18 +35,18 @@ function P = parabo3dFD(n,param)
                                n = [n(1,:); zeros(size(n(1,:)))];
 end
 
-vfc = param(1)/param(7);
-vfb = param(2)/param(8);
-bcc = param(3)/param(7)^2;
-bbc = param(4)/param(7)^2;
-bcb = param(5)/param(8)^2;
-bbb = param(6)/param(8)^2;
+    vfc = param(1) / param(7);
+vfb = param(2) / param(8);
+bcc = param(3) / param(7) ^ 2;
+bbc = param(4) / param(7) ^ 2;
+bcb = param(5) / param(8) ^ 2;
+bbb = param(6) / param(8) ^ 2;
 
-P_c = n(1,:).*( vfc + bcc.*n(1,:) + bbc.*n(2,:) );
-P_b = n(2,:).*( vfb + bcb.*n(1,:) + bbb.*n(2,:) );
+P_c = n(1, :).*(vfc + bcc.*n(1, :) + bbc.*n(2, :));
+P_b = n(2, :).*(vfb + bcb.*n(1, :) + bbb.*n(2, :));
 
-P_c( P_c < 0 ) = 0;
-P_b( P_b < 0 ) = 0;
+P_c(P_c < 0) = 0;
+P_b(P_b < 0) = 0;
 
 P = [P_c; P_b];
 
